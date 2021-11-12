@@ -1,0 +1,186 @@
+! inlist to evolve a 15 solar mass star
+
+! For the sake of future readers of this file (yourself included),
+! ONLY include the controls you are actually using.  DO NOT include
+! all of the other controls that simply have their default values.
+
+&star_job
+
+    mesa_dir = '' ! empty string defaults to environment variable MESA_DIR
+
+    history_columns_file = 'my_history_columns.list' ! if null string, use default.
+    profile_columns_file = 'my_profile_columns.list' ! if null string, use default.
+
+    create_pre_main_sequence_model = .true.
+    pre_ms_T_c = 9d5 ! 4d5
+
+    change_net = .true. ! switch nuclear reaction network
+    new_net_name = 'sagb_NeNa_MgAl.net'
+
+    !### set_rates_preference
+    !### new_rates_preference
+
+    ! + 1 = NACRE rates
+    ! + 2 = jina reaclib rates
+
+    set_rates_preference = .true.
+    new_rates_preference = 2
+
+    ! the following is an alternative to the above "set_uniform_initial_composition" method.
+    set_uniform_initial_xa_from_file = .true.
+  ! file_for_uniform_xa = 'init_comp_fehm2.2_y25_ap4_a09.data'
+  ! file_for_uniform_xa = 'init_comp_fehm1.55_y25_ap4_a09.data'
+    file_for_uniform_xa = 'init_comp_fehm0.3_y27_ap4_a09.data'
+
+  ! kappa_file_prefix = 'a09_aFe_p4'
+  ! kappa_CO_prefix = 'a09_aFe_p4_co'
+
+  ! kappa_lowT_prefix = 'lowT_a09_aFe_p4' ! As09 mix for lower temperatures.
+
+    kappa_file_prefix = 'a09'
+    kappa_CO_prefix = 'a09_co'
+
+    kappa_lowT_prefix = 'lowT_fa05_a09p' ! As09 mix for lower temperatures
+
+  ! display on-screen plots
+    pgstar_flag = .false. ! .true.
+
+    use_se_output = .false. ! .true.
+
+/ !end of star_job namelist
+
+
+&controls
+
+  ! use_other_D_mix = .true.
+  ! prescribed diffusion coefficient in the radiative envelope
+    x_ctrl(1) = 1800  ! model number to start RGB mixing from M=0.81, [Fe/H]=-1.55
+  ! x_ctrl(1) = 1800  ! model number to start RGB mixing from M=1.20, [Fe/H]=-0.3
+    x_ctrl(2) = 0.31157d0  ! mass coordinate of imprinted composition discontinuity M=0.81, [Fe/H]=-1.55
+  ! x_ctrl(2) = 0.27612d0  ! mass coordinate of imprinted composition discontinuity M=1.20, [Fe/H]=-0.3
+    x_ctrl(3) = 0.009d0  ! delta_K for mixing coefficient
+    x_ctrl(4) = 0.052d0  ! mixing depth in solar radii
+  ! x_ctrl(3) = 0.005d0  ! delta_K for mixing coefficient
+  ! x_ctrl(4) = 0.055d0  ! mixing depth in solar radii
+
+
+  ! thermohaline convection if this is .true.
+    use_Ledoux_criterion = .true.
+
+  ! start thermohaline convection below the bump luminoity
+  ! max_model_number = 1800 ! -1
+
+    thermohaline_option = 'Kippenhahn'
+    thermohaline_coeff = 667
+
+  ! starting specifications
+
+  ! initial_mass = 0.81 ! in Msun units
+    initial_mass = 1.20 ! in Msun units
+
+  ! initial_y = 0.25
+    initial_y = 0.27
+
+  ! initial_z = 0.0001705827  ! for alpha enhanced, [Fe/H] = -2.2 (M5466) with my initial_z
+  ! initial_z = 0.0007613799  ! for alpha enhanced, [Fe/H] = -1.55 (M3) with my initial_z
+    initial_z = 0.0066101885  ! [Fe/H] = -0.3 As09
+
+  ! opacity controls
+
+    cubic_interpolation_in_Z = .true.
+    use_Type2_opacities = .true.
+
+  ! Zbase = 0.0001705827  ! for alpha enhanced, [Fe/H] = -2.2 (M5466) with my initial_z
+  ! Zbase = 0.0007613799  ! for alpha enhanced, [Fe/H] = -1.55 (M3) with my initial_z
+    Zbase = 0.0066101885  ! [Fe/H] = -0.3 As09
+
+    history_interval = 1
+    profile_interval = 200
+    photostep = 500
+
+  ! pulse_info_format = 'GYRE' ! e.g., 'FGONG', 'OSC', 'GYRE'
+
+  ! element diffusion
+    do_element_diffusion = .false. ! .true.
+    diffusion_dt_limit = 3.15d11 ! no element diffusion if dt < this limit (in seconds)
+
+    diffusion_num_classes = 3 ! number of classes of species for diffusion calculations
+    diffusion_class_factor(1) = 1d0  ! 'h1'
+    diffusion_class_factor(2) = 1d0  ! 'he3'
+    diffusion_class_factor(3) = 1d0  ! 'he4'
+    diffusion_class_factor(4) = 0d0  ! 'o16'
+    diffusion_class_factor(5) = 0d0  ! 'fe56'
+
+  ! mass gain or loss
+    RGB_wind_scheme = 'Reimers' ! 'other'
+    AGB_wind_scheme = 'Blocker'
+    RGB_to_AGB_wind_switch = 1d-4
+    Reimers_wind_eta = 0.36 ! this parameter is specified in run_star_extras.f by x_ctrl(7)
+    Blocker_wind_eta = 0.0
+
+         ! Lower limits on central mass fractions.
+         ! Stop when central abundance drops below this limit.
+         ! Can have up to `num_xa_central_limits` of these (see `star_def.inc` for value).
+         ! `xa_central_lower_limit_species` contains an isotope name as defined in `chem_def.f`.
+         ! `xa_central_lower_limit` contains the lower limit value.
+
+  !   xa_central_lower_limit_species(1) = 'h1'
+  !   xa_central_lower_limit(1) = 0.71e0 ! 1e-6
+
+  ! when to stop  0.93 is used for MS-RGB tracks with mass loss only
+  ! HB_limit = 0.95 ! for detecting zero-age horizontal branch (ZAHB)
+  ! HB_limit = 0.01 ! for detecting zero-age horizontal branch (ZAHB)
+
+  ! max_age = 20d9
+  ! log_L_upper_limit = 1.5d0 ! 1d99
+
+  ! stop when total power from hydrogen consuming reactions (in Lsun units) is > this.
+  ! power_h_burn_upper_limit = 1d-1
+
+  ! stop when total power from reactions burning helium (in Lsun units) is > this.
+    power_he_burn_upper_limit = 1d3
+
+  ! mixing parameters
+
+    MLT_option = 'Henyey'
+
+  ! the mixing length is this parameter times a local pressure scale height.
+  ! to increase R vs. L, decrease alpha
+
+    mixing_length_alpha = 2.0
+
+  ! atmosphere
+  !  which_atm_option = 'simple_photosphere'
+     which_atm_option = 'Krishna_Swamy'
+      ! 'simple_photosphere'
+      ! don't integrate, just estimate for tau=2/3
+      ! 'Eddington_grey'
+      ! Eddington T-tau integration
+      ! 'Krishna_Swamy'
+      ! Krishna Swamy T-tau integration
+
+   !   max_years_for_timestep = 1d6
+
+     mesh_delta_coeff = 1.0 ! 0.25
+
+            !### min_thermohaline_gap
+
+            ! Close gap between thermohaline mixing regions if smaller than this (< 0 means skip this).
+            ! Gap measured radially in units of pressure scale height.
+
+         min_thermohaline_gap = 0.01
+
+
+            !### min_thermohaline_dropout
+            !### max_dropout_gradL_sub_grada
+
+            ! If find radiative region embedded in thermohaline,
+            ! and `max(gradL - grada)` in region is everywhere `< max_dropout_gradL_sub_grada`
+            ! and region height is `< min_thermohaline_dropout`
+            ! then convert the region to thermohaline.
+            ! `min_thermohaline_dropout <= 0` disables.
+
+         min_thermohaline_dropout = +1
+         max_dropout_gradL_sub_grada = 1d-3
+
+/ ! end of controls namelist
